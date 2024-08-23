@@ -15,7 +15,6 @@
 #define WebServer_ARTHI
 
 #include <stdio.h>
-#include <netinet/in.h>
 
 #define __WINx64__
 
