@@ -14,30 +14,23 @@
 #ifndef WebServer_ARTHI
 #define WebServer_ARTHI
 
-#include <stdio.h>
+#include <boost/asio.hpp>
+#include <boost/beast/core.hpp>
+#include <boost/beast/websocket.hpp>
+#include <boost/beast/version.hpp>
+#include <iostream>
+#include <memory>
+#include <string>
 
-#define __WINx64__
-
-/* Verifica se o sistema é compatível com Windows ou Linux (Coletor) */
-#ifdef __WINx64__
-#include <winsock.h>
-#else 
-#include <sys/socket.h>
-#endif 
 /* Final da verificação */
 
 /* ========================================================================= */
 /* --- Funções e Suas definições --- */
 
-namespace WS {
-    class ARTHI_Server_Socket {
-        private:
-            int connection;
-        public:
-            ARTHI_Server_Socket(int domain, int services, int protocol);
-        };
-}
-
-
+namespace beast = boost::beast;     // from <boost/beast.hpp>
+namespace http = beast::http;       // from <boost/beast/http.hpp>
+namespace websocket = beast::websocket; // from <boost/beast/websocket.hpp>
+namespace net = boost::asio;        // from <boost/asio.hpp>
+using tcp = boost::asio::ip::tcp;   // from <boost/asio/ip/tcp.hpp>
 
 #endif /* WebServer_ARTHI */
