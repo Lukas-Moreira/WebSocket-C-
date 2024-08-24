@@ -1,0 +1,25 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Compilar WebSocket",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "-Wall",
+                "-Wextra",
+                "-g3",
+                "e:/Arthi/WebSocket-C-/WebSocket in C++/webserver.cpp",
+                "-o",
+                "e:/Arthi/WebSocket-C-/WebSocket in C++/output/webserver.exe",
+                "-lws2_32"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$gcc"],
+            "detail": "Compilação com MinGW"
+        }
+    ]
+}
