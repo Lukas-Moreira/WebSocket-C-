@@ -11,71 +11,39 @@
 ============================================================================ */
 
 /* --- Cabeçalhos importados --- */
-#include "webserver.hpp"
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <iostream>
 
 
 /* ========================================================================= */
 /* --- Função Principal --- */
 
-void do_session(tcp::socket socket)
-{
-    try
-    {
-        // Este buffer é usado para ler e escrever mensagens.
-        beast::flat_buffer buffer;
+int main() {
+    WSADATA wsaData;
+    SOCKET sock = INVALID_SOCKET;
 
-        // Cria o stream WebSocket que 'tomará' conta da conexão.
-        websocket::stream<tcp::socket> ws{std::move(socket)};
-
-        // Faz o handshake do WebSocket (aceita a conexão).
-        ws.accept();
-
-        for(;;)
-        {
-            // Lê uma mensagem
-            ws.read(buffer);
-
-            // Ecoa de volta a mensagem recebida.
-            ws.text(ws.got_text());
-            ws.write(buffer.data());
-
-            // Limpa o buffer para a próxima mensagem
-            buffer.consume(buffer.size());
-        }
+    // Inicializa o Winsock
+    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (result != 0) {
+        std::cerr << "WSAStartup failed: " << result << std::endl;
+        return 1;
     }
-    catch(beast::system_error const& se)
-    {
-        // Handle close or any other error
-        if(se.code() != websocket::error::closed)
-            std::cerr << "Error: " << se.code().message() << "\n";
+
+    // Cria um socket
+    sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (sock == INVALID_SOCKET) {
+        std::cerr << "Error at socket(): " << WSAGetLastError() << std::endl;
+        WSACleanup();
+        return 1;
     }
-}
 
-int main()
-{
-    try
-    {
-        // Criando o contexto IO.
-        net::io_context ioc;
+    std::cout << "Socket criado com sucesso!" << std::endl;
 
-        // Objeto aceitando conexões.
-        tcp::acceptor acceptor{ioc, tcp::endpoint{tcp::v4(), 8080}};
-
-        for(;;)
-        {
-            // Aceita uma nova conexão.
-            tcp::socket socket{ioc};
-            acceptor.accept(socket);
-
-            // Inicia uma nova sessão para cada cliente conectado.
-            std::thread{std::bind(&do_session, std::move(socket))}.detach();
-        }
-    }
-    catch(std::exception const& e)
-    {
-        std::cerr << "Error: " << e.what() << "\n";
-        return EXIT_FAILURE;
-    }
+    // Fecha o socket
+    closesocket(sock);
+    WSACleanup();
+    return 0;
 }
 
 /* ============================================================================  
