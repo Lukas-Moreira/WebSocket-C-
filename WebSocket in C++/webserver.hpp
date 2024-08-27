@@ -3,6 +3,7 @@
 #ifdef _WIN32 // Verifica se está em um sistema Windows
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <iphlpapi.h>
 #elif defined(__linux__) // Verifica se está em um sistema Linux
 #include <stdio.h>
 #include <sys/types.h>
@@ -12,6 +13,8 @@
 #include <arpa/inet.h>
 #include <cstring>
 #include <cerrno>
+#include <ifaddrs.h>
+#include <netdb.h>
 #endif
 
 #include <iostream>
@@ -44,15 +47,54 @@ class SocketWin
             else {
                 std::cout << "\n==========================================" << std::endl;
                 std::cout << "Socket criado com sucesso" << std::endl;
+
+                std::string ipAddress;
+                getIPAddress(ipAddress);  // Obtém o IP do dispositivo
+
                 server_addr.sin_family = AF_INET;
-                server_addr.sin_addr.s_addr = INADDR_ANY;
+                server_addr.sin_addr.s_addr = inet_addr(ipAddress.c_str());
                 server_addr.sin_port = htons(PORT);
                 BindSocket(server_sock);
                 GetSocket(server_sock);
-                AcceptDevices(server_sock);
                 ListenSocket(server_sock);
+                AcceptDevices(server_sock);
                 std::cout << "\nAguardando conexoes no Windows na porta " << PORT << "...\n" << std::endl;
             };
+        }
+
+        void getIPAddress(std::string& ipAddress) {
+            PIP_ADAPTER_INFO pAdapterInfo;
+            PIP_ADAPTER_INFO pAdapter = NULL;
+            DWORD dwRetVal = 0;
+
+            ULONG ulOutBufLen = sizeof(IP_ADAPTER_INFO);
+            pAdapterInfo = (IP_ADAPTER_INFO *) malloc(sizeof(IP_ADAPTER_INFO));
+            if (pAdapterInfo == NULL) {
+                std::cerr << "Erro ao alocar memória para adapter info" << std::endl;
+                return;
+            }
+
+            if (GetAdaptersInfo(pAdapterInfo, &ulOutBufLen) == ERROR_BUFFER_OVERFLOW) {
+                free(pAdapterInfo);
+                pAdapterInfo = (IP_ADAPTER_INFO *) malloc(ulOutBufLen);
+                if (pAdapterInfo == NULL) {
+                    std::cerr << "Erro ao alocar memória para adapter info" << std::endl;
+                    return;
+                }
+            }
+
+            if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) == NO_ERROR) {
+                pAdapter = pAdapterInfo;
+                while (pAdapter) {
+                    ipAddress = pAdapter->IpAddressList.IpAddress.String;
+                    pAdapter = pAdapter->Next;
+                }
+            } else {
+                std::cerr << "GetAdaptersInfo falhou com erro: " << dwRetVal << std::endl;
+            }
+
+            if (pAdapterInfo)
+                free(pAdapterInfo);
         }
 
         void BindSocket (SOCKET socket){
@@ -116,18 +158,53 @@ class SocketUbu {
             if (socket_server < 0) {
                 std::cerr << "Erro ao criar o socket: " << strerror(errno) << std::endl;
             } else {
-                std::cout << "\n==========================================" << std::endl;
+                std::cout << "\n=============================================" << std::endl;
                 std::cout << "Socket criado com sucesso" << std::endl;
+
+                std::string ipAddress;
+                getIPAddress(ipAddress);
+
                 server_addr.sin_family = AF_INET;
-                server_addr.sin_addr.s_addr = INADDR_ANY;
+                inet_pton(AF_INET, ipAddress.c_str(), &server_addr.sin_addr);
                 server_addr.sin_port = htons(PORT);
+                
                 BindSocket(socket_server);
                 GetSocket(socket_server);
-                AcceptSocket(socket_server);
                 ListenSocket(socket_server);
-                std::cout << "\nAguardando conexões no Linux na porta " << PORT << "...\n" << std::endl;
+                AcceptSocket(socket_server);
 
             }
+        }
+
+        void getIPAddress(std::string& ipAddress) {
+            struct ifaddrs *ifaddr, *ifa;
+            int family, s;
+            char host[NI_MAXHOST];
+
+            if (getifaddrs(&ifaddr) == -1) {
+                perror("getifaddrs");
+                return;
+            }
+
+            for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+                if (ifa->ifa_addr == NULL) continue;
+
+                family = ifa->ifa_addr->sa_family;
+                if (family == AF_INET) {
+                    s = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in), host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+                    if (s != 0) {
+                        std::cerr << "getnameinfo() failed: " << gai_strerror(s) << std::endl;
+                        continue;
+                    }
+
+                    if (std::string(host) != "127.0.0.1") { // Ignorar endereço localhost
+                        ipAddress = host;
+                        break;
+                    }
+                }
+            }
+
+            freeifaddrs(ifaddr);
         }
 
         void BindSocket (int socket_server){
@@ -135,6 +212,8 @@ class SocketUbu {
             if (result < 0){
                 std::cerr << "\nFalha ao vincular o socket: " << strerror(errno) << std::endl;
                 CloseSocket(socket_server);
+            } else {
+                std::cout << "\nAguardando conexões no Linux na porta " << PORT << "..." << std::endl;
             }
         }
 
@@ -166,7 +245,7 @@ class SocketUbu {
                 CloseSocket(socket_server);
             } else {
                 char client_ip[INET_ADDRSTRLEN];
-                inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET6_ADDRSTRLEN);
+                inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
                 std::cout << "\nConexão recebida de: " << client_ip << ":" << ntohs(client_addr.sin_port) << std::endl;
             }
         }
