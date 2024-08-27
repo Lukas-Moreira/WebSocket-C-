@@ -15,80 +15,15 @@
 /* ========================================================================= */
 /* --- Função Principal --- */
 
-#define PORT 8080  // Porta para o servidor escutar
+SocketWin socketwin;
+WSADATA wsaData;
+SOCKET server_sock = INVALID_SOCKET, client_sock = INVALID_SOCKET;
 
 int main() {
     #ifdef _WIN32 // Código específico para Windows
-    WSADATA wsaData;
-    SOCKET server_sock = INVALID_SOCKET, client_sock = INVALID_SOCKET;
-    struct sockaddr_in server_addr, client_addr;
-    int client_addr_size = sizeof(client_addr);
 
-    // Inicializa o Winsock
-    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (result != 0) {
-        std::cerr << "WSAStartup failed: " << result << std::endl; // Equivalente ao print
-        return 1;
-    }
-
-    // Cria um socket
-    server_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (server_sock == INVALID_SOCKET) {
-        std::cerr << "Error at socket(): " << WSAGetLastError() << std::endl; // Equivalente ao print
-        WSACleanup();
-        return 1;
-    }
-
-    // Define o endereço e a porta do servidor
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(PORT);
-
-    // Vincula o socket ao endereço e porta especificados
-    if (bind(server_sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
-        std::cerr << "Bind failed: " << WSAGetLastError() << std::endl; // Equivalente ao print
-        closesocket(server_sock);
-        WSACleanup();
-        return 1;
-    }
-
-    // Obtém e imprime o endereço IP e a porta do socket do servidor
-    struct sockaddr_in local_addr;
-    int local_addr_size = sizeof(local_addr);
-    if (getsockname(server_sock, (struct sockaddr*)&local_addr, &local_addr_size) == 0) {
-        char* local_ip = inet_ntoa(local_addr.sin_addr);  // Usando inet_ntoa para Windows
-        std::cout << "Endereco do servidor: " << local_ip << ":" << ntohs(local_addr.sin_port) << std::endl; // Equivalente ao print
-    } else {
-        std::cerr << "Erro ao obter o endereço do socket: " << WSAGetLastError() << std::endl; // Equivalente ao print
-    }
-
-    // Escuta por conexões
-    if (listen(server_sock, 3) == SOCKET_ERROR) {
-        std::cerr << "Listen failed: " << WSAGetLastError() << std::endl; // Equivalente ao print
-        closesocket(server_sock);
-        WSACleanup();
-        return 1;
-    }
-
-    std::cout << "Aguardando conexoes no Windows na porta " << PORT << "..." << std::endl; // Equivalente ao print
-
-    // Aceita uma conexão de cliente
-    client_sock = accept(server_sock, (struct sockaddr*)&client_addr, &client_addr_size);
-    if (client_sock == INVALID_SOCKET) {
-        std::cerr << "Accept failed: " << WSAGetLastError() << std::endl; // Equivalente ao print
-        closesocket(server_sock);
-        WSACleanup();
-        return 1;
-    }
-
-    // Imprime o endereço IP do cliente
-    char* client_ip = inet_ntoa(client_addr.sin_addr);
-    std::cout << "Conexão recebida de: " << client_ip << ":" << ntohs(client_addr.sin_port) << std::endl; // Equivalente ao print
-
-    // Fecha os sockets
-    closesocket(client_sock);
-    closesocket(server_sock);
-    WSACleanup();
+    socketwin.InitSocket(wsaData);
+    socketwin.CreateSocket(server_sock);
 
     #elif defined(__linux__) // Código específico para Linux
     int server_sock, client_sock;

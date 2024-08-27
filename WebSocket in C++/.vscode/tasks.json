@@ -12,6 +12,7 @@
                 "e:/Arthi/WebSocket-C-/WebSocket in C++/webserver.cpp",
                 "-o",
                 "e:/Arthi/WebSocket-C-/WebSocket in C++/output/webserver.exe",
+                "e:/Arthi/WebSocket-C-/WebSocket in C++/webserver.hpp",
                 "-lws2_32"
             ],
             "group": {
@@ -20,6 +21,6 @@
             },
             "problemMatcher": ["$gcc"],
             "detail": "Compilação com MinGW"
-        }
+        },
     ]
 }
