@@ -105,4 +105,76 @@ class SocketWin
 
 #elif defined(__linux__) 
 
+class SocketUbu {
+    private:
+        struct sockaddr_in server_addr, client_addr;
+        socklen_t client_addr_size = sizeof(client_addr);
+
+    public:
+        void CreateSocket (int socket_server){
+            socket_server = socket(AF_INET,SOCK_STREAM,0);
+            if (socket_server < 0) {
+                std::cerr << "Erro ao criar o socket: " << strerror(errno) << std::endl;
+            } else {
+                std::cout << "\n==========================================" << std::endl;
+                std::cout << "Socket criado com sucesso" << std::endl;
+                server_addr.sin_family = AF_INET;
+                server_addr.sin_addr.s_addr = INADDR_ANY;
+                server_addr.sin_port = htons(PORT);
+                BindSocket(socket_server);
+                GetSocket(socket_server);
+                AcceptSocket(socket_server);
+                ListenSocket(socket_server);
+                std::cout << "\nAguardando conexões no Linux na porta " << PORT << "...\n" << std::endl;
+
+            }
+        }
+
+        void BindSocket (int socket_server){
+            int result  = bind(socket_server, (struct sockaddr*)&server_addr, sizeof(server_addr));
+            if (result < 0){
+                std::cerr << "\nFalha ao vincular o socket: " << strerror(errno) << std::endl;
+                CloseSocket(socket_server);
+            }
+        }
+
+        void GetSocket (int socket_server){
+            struct sockaddr_in local_addr;
+            socklen_t local_addr_size = sizeof(local_addr);
+            int result = getsockname(socket_server, (struct sockaddr*)&local_addr, &local_addr_size);
+            if (result == 0){
+                char local_ip[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, &local_addr.sin_addr, local_ip, INET_ADDRSTRLEN);
+                std::cout << "\nEndereço do servidor: " << local_ip << ":" << ntohs(local_addr.sin_port) << "\n" << std::endl; 
+            } else {
+                std::cerr << "\nErro ao obter o endereço do socket: " << strerror(errno) << std::endl;
+            }
+        }
+
+        void ListenSocket (int socket_server){
+            int result = listen(socket_server,3);
+            if (result < 0){
+                std::cerr << "\nFalha ao escutar os dispositivos: " << strerror(errno) << std::endl;
+                CloseSocket(socket_server);
+            }
+        }
+
+        void AcceptSocket (int socket_server){
+            int client_sock = accept(socket_server, (struct sockaddr*)&client_addr, &client_addr_size);
+            if (client_sock < 0) {
+                std::cerr << "\nNao foi possivel aceitar os dispositivos: " << strerror(errno) << std::endl;
+                CloseSocket(socket_server);
+            } else {
+                char client_ip[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET6_ADDRSTRLEN);
+                std::cout << "\nConexão recebida de: " << client_ip << ":" << ntohs(client_addr.sin_port) << std::endl;
+            }
+        }
+
+        void CloseSocket (int socket_server){
+            close(socket_server);
+        }
+};
+
+
 #endif
