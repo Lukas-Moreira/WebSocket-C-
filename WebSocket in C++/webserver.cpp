@@ -15,9 +15,11 @@
 /* ========================================================================= */
 /* --- Função Principal --- */
 
+#ifdef _WIN32
 SocketWin socketwin;
 WSADATA wsaData;
 SOCKET server_sock = INVALID_SOCKET, client_sock = INVALID_SOCKET;
+#endif
 
 int main() {
     #ifdef _WIN32 // Código específico para Windows

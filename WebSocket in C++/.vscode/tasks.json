@@ -15,12 +15,34 @@
                 "e:/Arthi/WebSocket-C-/WebSocket in C++/webserver.hpp",
                 "-lws2_32"
             ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "Compilação com MinGW"
+        },
+        {
+            "type": "cppbuild",
+            "label": "C/C++: gcc arquivo de build ativo",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "${workspaceFolder}/webserver.cpp",
+                "-o",
+                "${workspaceFolder}/output/webserver_linux.o"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": ["$gcc"],
-            "detail": "Compilação com MinGW"
-        },
+            "detail": "Tarefa gerada pelo Depurador."
+        }
     ]
 }
