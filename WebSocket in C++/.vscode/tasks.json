@@ -9,11 +9,12 @@
                 "-Wall",
                 "-Wextra",
                 "-g3",
-                "e:/Arthi/WebSocket-C-/WebSocket in C++/webserver.cpp",
+                "e:/Arthi/WebSocket-C-/WebSocket in C++/main.cpp",
                 "-o",
-                "e:/Arthi/WebSocket-C-/WebSocket in C++/output/webserver.exe",
+                "e:/Arthi/WebSocket-C-/WebSocket in C++/output/webserver_win.exe",
                 "e:/Arthi/WebSocket-C-/WebSocket in C++/webserver.hpp",
-                "-lws2_32"
+                "-lws2_32",
+                "-liphlpapi"
             ],
             "group": "build",
             "problemMatcher": [
